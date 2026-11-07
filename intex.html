@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://dihad.github.io/Repeating-Decimal-Operations/web%20icon.jpeg" />
+<title>Organic Compound Converter | by Dihad</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- KaTeX for LaTeX rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+<style>
+  /* ===== DESIGN SYSTEM TOKENS ===== */
+  :root{
+    --bg: #0a0b0e;
+    --surface: rgba(255,255,255,0.045);
+    --border: rgba(255,255,255,0.09);
+    --border-hi: rgba(255,255,255,0.2);
+
+    --orange: #ff7a29;
+    --orange-soft: #ffb066;
+    --purple: #9a5bff;
+    --purple-soft: #c3a4ff;
+    --green: #34e6a6;
+    --green-soft: #8ff5cf;
+    --gray: #8b93a3;
+    --gray-dim: #565d6b;
+
+    --text: #eef0f3;
+    --text-dim: #9aa1ad;
+
+    --radius-lg: 20px;
+    --radius: 14px;
+    --radius-sm: 10px;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif;
+    position:relative; min-height:100vh; display: flex; flex-direction: column;
+  }
+
+  /* Background layers */
+  .bg-fixed{
+    position:fixed; inset:0; z-index:-2;
+    background:
+      radial-gradient(ellipse 900px 600px at 10% -5%, rgba(255,122,41,0.14), transparent 60%),
+      radial-gradient(ellipse 700px 700px at 100% 10%, rgba(154,91,255,0.12), transparent 60%),
+      radial-gradient(ellipse 800px 600px at 30% 100%, rgba(52,230,166,0.08), transparent 60%),
+      linear-gradient(180deg, #08090b 0%, #0a0b0e 40%, #0c0e12 100%);
+    background-attachment: fixed;
+  }
+  .grid-overlay{
+    position:fixed; inset:0; z-index:-1;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size:48px 48px;
+  }
+
+  h1,h2,h3,h4{ font-family:'Space Grotesk', sans-serif; letter-spacing:-0.01em; margin:0; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ===== LAYOUT ===== */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 24px 40px;
+    flex: 1;
+    width: 100%;
+  }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .main-title {
+    font-size: 2.5rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--text), var(--text-dim));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ===== MOBILE TOGGLE SWITCH ===== */
+  .toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .toggle-switch {
+    width: 44px; height: 24px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  #mobileToggle { display: none; }
+  #mobileToggle:checked + .toggle-switch {
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+  #mobileToggle:checked + .toggle-switch::after {
+    transform: translateX(20px);
+  }
+
+  /* ===== GLASS ===== */
+  .glass{
+    background: linear-gradient(155deg, var(--surface), rgba(255,255,255,0.015));
+    border:1px solid var(--border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: 0 1px 0 0 rgba(255,255,255,0.06) inset, 0 20px 50px -20px rgba(0,0,0,0.6);
+  }
+
+  /* ===== FORM ELEMENTS ===== */
+  .field{ display:flex; flex-direction:column; gap:8px; }
+  .field label{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--gray); text-transform:uppercase; letter-spacing:.06em; }
+  .field input{
+    background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; color:var(--text); font-family:'JetBrains Mono', monospace; font-size:14px; outline:none; transition: border-color 0.2s;
+    width: 100%;
+  }
+  .field input:focus{ border-color:var(--orange); box-shadow: 0 0 0 3px rgba(255,122,41,0.15); }
+
+  .btn{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:14.5px; padding:14px 24px;
+    border-radius:12px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
+    border:none; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .btn-primary{ background:linear-gradient(135deg,var(--orange),#ff9a4d); color:#1a0d02; box-shadow:0 8px 30px -8px rgba(255,122,41,0.55); width:100%; }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 12px 34px -8px rgba(255,122,41,0.75); }
+  .btn-outline-orange{ color:var(--orange-soft); border:1px solid rgba(255,122,41,0.4); background:rgba(255,122,41,0.06); }
+  .btn-outline-orange:hover{ background:rgba(255,122,41,0.12); }
+
+  /* ===== INPUT GRID ===== */
+  .inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: end;
+    margin-bottom: 24px;
+  }
+  .arrow-icon {
+    font-size: 1.5rem;
+    color: var(--orange-soft);
+    padding-bottom: 12px;
+  }
+
+  /* ===== STEP CARDS ===== */
+  .step-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 24px 24px 72px;
+    margin-bottom: 16px;
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .step-number {
+    position: absolute; left: 24px; top: 24px;
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--orange), var(--orange-soft));
+    color: #1a0d02;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px;
+    box-shadow: 0 4px 12px rgba(255,122,41,0.3);
+  }
+  .step-name {
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--orange-soft);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;
+  }
+  .step-eq {
+    font-size: 1.25rem;
+    padding: 20px 16px;
+    background: rgba(255,122,41,0.05);
+    border: 1px solid rgba(255,122,41,0.15);
+    border-radius: 8px;
+    overflow-x: auto;
+    color: var(--text);
+    transition: all 0.3s ease;
+  }
+
+  /* ===== MOBILE FIT CLASS (Toggled via JS) ===== */
+  .mobile-fit .step-eq {
+    overflow-x: hidden;
+    padding: 12px 8px;
+  }
+  .mobile-fit .step-eq .katex-display {
+    font-size: 0.85em; /* Scales down the math */
+  }
+  .mobile-fit .step-eq .katex-display > .katex {
+    white-space: normal; /* Forces wrap if needed */
+  }
+
+  /* ===== ALERTS ===== */
+  .alert{ padding:24px; border-radius:12px; display:flex; gap:12px; align-items:center; font-size:14.5px; line-height:1.55; margin-bottom: 24px; }
+  .alert.error{ background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); color:#f87171; }
+  .alert.success{ background:rgba(52,230,166,0.08); border:1px solid rgba(52,230,166,0.3); color:var(--green); }
+  
+  /* Utility */
+  .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+  .results-header { margin-bottom: 24px; }
+  .results-header h3 { font-size: 20px; color: var(--text); margin-bottom: 4px; }
+  .results-header p { color: var(--text-dim); font-size: 14px; margin: 0; }
+
+  /* ===== FOOTER ===== */
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 40px 24px;
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 650px) {
+    .container { padding: 40px 16px 30px; }
+    .main-title { font-size: 2rem; }
+    .inputs-grid { grid-template-columns: 1fr; gap: 12px; }
+    .arrow-icon { transform: rotate(90deg); padding: 0; margin: 4px auto; text-align: center; width: 100%; }
+    .step-card { padding: 64px 16px 20px 16px; }
+    .step-number { top: 16px; left: 16px; }
+    .step-eq { font-size: 1.1rem; padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fixed"></div>
+<div class="grid-overlay"></div>
+
+<div class="container">
+  <div class="header-row">
+    <h1 class="main-title">Organic Compound Converter</h1>
+    
+    <!-- Mobile Fit Toggle -->
+    <label class="toggle-wrapper">
+      <input type="checkbox" id="mobileToggle">
+      <div class="toggle-switch"></div>
+      Fit to screen
+    </label>
+  </div>
+
+  <!-- FINDER PANEL -->
+  <section id="finder">
+    <div class="glass" style="padding: 32px; margin-bottom: 48px;">
+      <div class="inputs-grid">
+        <div class="field">
+          <label>Starting Compound</label>
+          <input id="fromInput" placeholder="e.g. CH4, ethane, C2H6" autocomplete="off">
+        </div>
+        <div class="arrow-icon">→</div>
+        <div class="field">
+          <label>Target Compound</label>
+          <input id="toInput" placeholder="e.g. CCl4, acetaldehyde" autocomplete="off">
+        </div>
+      </div>
+      <button id="findBtn" class="btn btn-primary">Find Pathway</button>
+      
+      <div class="row" style="margin-top: 24px;">
+        <span style="font-family: 'JetBrains Mono'; font-size: 12px; color: var(--gray);">Try:</span>
+        <button class="btn btn-outline-orange ex-chip" data-from="CH4" data-to="CCl4" style="padding: 8px 16px; font-size: 12.5px;">CH4 → CCl4</button>
+        <button class="btn btn-outline-orange ex-chip" data-from="CH≡CH" data-to="CH3-CHO" style="padding: 8px 16px; font-size: 12.5px;">Ethyne → Acetaldehyde</button>
+        <button class="btn btn-outline-orange ex-chip" data-from="CH3-CH2-CH2-CH2-OH" data-to="CH3-CH2-CH2-CHO" style="padding: 8px 16px; font-size: 12.5px;">Butanol → Butanal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <div id="results"></div>
+
+</div>
+
+<footer>
+  2026 @ Made by Dihad
+</footer>
+
+<script>
+/* ================================================================
+   1. PARSER & STRUCTURAL FORMULA GENERATOR
+   ================================================================ */
+const PREFIXES = { 1: "meth", 2: "eth", 3: "prop", 4: "but", 5: "pent", 6: "hex", 7: "hept", 8: "oct", 9: "non", 10: "dec" };
+
+// Parses formulas, names, and structural symbols into a state { type, c, cl }
+function parseCompound(input) {
+  // 1. Normalize: lowercase, remove structural dashes/equals/triple bonds
+  let s = input.toLowerCase().replace(/[_\-\=\≡\s]/g, '');
+  s = s.replace(/---/g, '');
+
+  // 2. Try parsing as a name (e.g., "ethanol", "butane")
+  for (const [num, prefix] of Object.entries(PREFIXES)) {
+    const c = parseInt(num, 10);
+    if (s.includes(prefix) || (c === 1 && s.includes("form"))) {
+      if (s.includes("oic") || s.includes("acid")) return { type: "acid", c };
+      if (s.includes("ol")) return { type: "alcohol", c };
+      if (s.includes("al") || s.includes("one") || s.includes("aldehyde")) return { type: "carbonyl", c };
+      if (s.includes("chloride") || s.includes("bromo") || s.includes("halide")) return { type: "halide", c: c, cl: 1 };
+      if (s.includes("yne")) return { type: "alkyne", c };
+      if (s.includes("ene")) return { type: "alkene", c };
+      if (s.includes("ane")) return { type: "alkane", c };
+    }
+  }
+
+  // Exceptions
+  if (s === "acetone") return { type: "carbonyl", c: 3 };
+  if (s === "acetaldehyde") return { type: "carbonyl", c: 2 };
+  if (s === "formaldehyde") return { type: "carbonyl", c: 1 };
+  if (s === "aceticacid" || s === "ethanoicacid") return { type: "acid", c: 2 };
+
+  // 3. Parse empirical formulas or structural strings
+  let cCount = 0, hCount = 0, oCount = 0, clCount = 0;
+  const formulaMatch = s.match(/^c(\d*)(h(\d*))?(o(\d*))?(cl(\d*))?$/);
+  
+  if (formulaMatch) {
+    cCount = parseInt(formulaMatch[1] || "1");
+    hCount = formulaMatch[2] ? parseInt(formulaMatch[3] || "1") : 0;
+    oCount = formulaMatch[4] ? parseInt(formulaMatch[5] || "1") : 0;
+    clCount = formulaMatch[6] ? parseInt(formulaMatch[7] || "1") : 0;
+  } else {
+    // Structural counting (e.g., ch3cch -> 3 Carbons, 4 Hydrogens)
+    let i = 0;
+    while (i < s.length) {
+      let char = s[i];
+      if (['c', 'h', 'o', 'l'].includes(char)) {
+        let count = 0;
+        let j = i + 1;
+        while (j < s.length && !isNaN(s[j])) {
+          count = count * 10 + parseInt(s[j]);
+          j++;
+        }
+        if (count === 0) count = 1;
+        
+        if (char === 'c') cCount += count;
+        else if (char === 'h') hCount += count;
+        else if (char === 'o') oCount += count;
+        else if (char === 'l' && i > 0 && s[i-1] === 'c') {
+          clCount += count;
+          cCount -= 1; // Subtract the C from Cl
+        }
+        i = j;
+      } else {
+        i++;
+      }
+    }
+  }
+
+  // Determine classification
+  if (cCount > 0 && cCount <= 10) {
+    if (clCount > 0) return { type: "halide", c: cCount, cl: clCount };
+    if (oCount === 2) return { type: "acid", c: cCount };
+    if (oCount === 1) {
+      if (hCount === cCount * 2 + 2) return { type: "alcohol", c: cCount };
+      if (hCount === cCount * 2)     return { type: "carbonyl", c: cCount };
+    }
+    if (oCount === 0) {
+      if (hCount === cCount * 2 + 2) return { type: "alkane", c: cCount };
+      if (hCount === cCount * 2)     return { type: "alkene", c: cCount };
+      if (hCount === cCount * 2 - 2) return { type: "alkyne", c: cCount };
+    }
+  }
+
+  return null;
+}
+
+// Generates LaTeX structural formulas cleanly
+function getStruct(type, c, cl) {
+  const ch3 = "\\text{CH}_3";
+  const ch2 = "\\text{CH}_2";
+  const ch  = "\\text{CH}";
+  const c_  = "\\text{C}";
+  const bond = "\\text{-}";
+  const dbl = "\\text{=}";
+  const trp = "\\equiv";
+
+  if (type === 'halide') {
+    if (c === 1) {
+      if (cl === 1) return "\\text{CH}_3\\text{Cl}";
+      if (cl === 2) return "\\text{CH}_2\\text{Cl}_2";
+      if (cl === 3) return "\\text{CHCl}_3";
+      if (cl === 4) return "\\text{CCl}_4";
+    }
+    // Default monohalide for higher chains
+    let s = [ch3];
+    for(let i=0; i<c-2; i++) s.push(ch2);
+    s.push(ch2 + bond + "\\text{Cl}");
+    return s.join(bond);
+  }
+
+  if (c === 1) {
+    if (type === 'alkane') return "\\text{CH}_4";
+    if (type === 'alcohol') return "\\text{CH}_3\\text{OH}";
+    if (type === 'carbonyl') return "\\text{HCHO}";
+    if (type === 'acid') return "\\text{HCOOH}";
+  }
+
+  if (type === 'alkane') {
+    let s = [ch3];
+    for(let i=0; i<c-2; i++) s.push(ch2);
+    s.push(ch3);
+    return s.join(bond);
+  }
+  if (type === 'alkene') {
+    if (c === 2) return ch2 + dbl + ch2;
+    let s = [ch2 + dbl + ch];
+    for(let i=0; i<c-3; i++) s.push(ch2);
+    s.push(ch3);
+    return s.join(bond);
+  }
+  if (type === 'alkyne') {
+    if (c === 2) return ch + trp + ch;
+    let s = [ch + trp + c_];
+    for(let i=0; i<c-3; i++) s.push(ch2);
+    s.push(ch3);
+    return s.join(bond);
+  }
+  if (type === 'alcohol') {
+    let s = [ch3];
+    for(let i=0; i<c-2; i++) s.push(ch2);
+    s.push(ch2 + bond + "\\text{OH}");
+    return s.join(bond);
+  }
+  if (type === 'carbonyl') {
+    if (c === 1) return "\\text{HCHO}";
+    let s = [ch3];
+    for(let i=0; i<c-2; i++) s.push(ch2);
+    s.push("\\text{CHO}");
+    return s.join(bond);
+  }
+  if (type === 'acid') {
+    let s = [ch3];
+    for(let i=0; i<c-2; i++) s.push(ch2);
+    s.push("\\text{COOH}");
+    return s.join(bond);
+  }
+}
+
+/* ================================================================
+   2. REACTION GENERATOR (STRICTLY FOLLOWING GRADE 10 RULEBOOK)
+   ================================================================ */
+function getReactions(state) {
+  const { type, c, cl } = state;
+  const rxns = [];
+
+  const addRxn = (to, name, eqGenerator) => {
+    const f = getStruct(type, c, cl);
+    const t = getStruct(to.type, to.c, to.cl);
+    const eq = eqGenerator(f, t);
+    rxns.push({ to, name, eq, fromType: type, fromC: c, fromCl: cl });
+  };
+
+  // --- ALKANE ---
+  if (type === "alkane") {
+    if (c >= 2) {
+      addRxn({ type: "alkene", c }, "Dehydrogenation",
+        (f, t) => `${f} \\xrightarrow{\\text{Cr}_2\\text{O}_3/\\text{Al}_2\\text{O}_3, \\Delta} ${t} + \\text{H}_2`);
+    }
+    addRxn({ type: "halide", c, cl: 1 }, "Free-Radical Halogenation",
+      (f, t) => `${f} + \\text{Cl}_2 \\xrightarrow{\\text{UV}} ${t} + \\text{HCl}`);
+  }
+
+  // --- HALIDE (Stepwise Chlorination & Hydrolysis) ---
+  if (type === "halide") {
+    // Stepwise UV Chlorination (Methane sequence)
+    if (c === 1 && cl < 4) {
+      addRxn({ type: "halide", c: 1, cl: cl + 1 }, "Stepwise Chlorination (UV)",
+        (f, t) => `${f} + \\text{Cl}_2 \\xrightarrow{\\text{UV}} ${t} + \\text{HCl}`);
+    }
+    
+    // Hydrolysis and Elimination (Assuming monohalide for simplicity in higher chains)
+    if (cl === 1) {
+      addRxn({ type: "alcohol", c }, "Hydrolysis",
+        (f, t) => `${f} + \\text{NaOH(aq)} \\xrightarrow{\\Delta} ${t} + \\text{NaCl}`);
+      if (c >= 2) {
+        addRxn({ type: "alkene", c }, "Dehydrohalogenation",
+          (f, t) => `${f} + \\text{NaOH(alc)} \\xrightarrow{\\Delta} ${t} + \\text{NaCl} + \\text{H}_2\\text{O}`);
+      }
+      // Wurtz Reaction
+      if (c * 2 <= 10) {
+        addRxn({ type: "alkane", c: c * 2 }, "Wurtz Reaction (Chain ×2)",
+          (f, t) => `2${f} + 2\\text{Na} \\xrightarrow{\\text{Dry ether}} ${t} + 2\\text{NaCl}`);
+      }
+    }
+  }
+
+  // --- ALKENE ---
+  if (type === "alkene") {
+    addRxn({ type: "alkane", c }, "Hydrogenation",
+      (f, t) => `${f} + \\text{H}_2 \\xrightarrow{\\text{Ni}, \\Delta} ${t}`);
+    addRxn({ type: "alcohol", c }, "Hydration",
+      (f, t) => `${f} + \\text{H}_2\\text{O} \\xrightarrow{\\text{H}_3\\text{PO}_4, \\Delta} ${t}`);
+    addRxn({ type: "halide", c, cl: 1 }, "Hydrohalogenation",
+      (f, t) => `${f} + \\text{HCl} \\rightarrow ${t}`);
+    if (c >= 2) {
+      addRxn({ type: "alkyne", c }, "Dehydrogenation",
+        (f, t) => `${f} \\xrightarrow{\\Delta, \\text{cat.}} ${t} + \\text{H}_2`);
+    }
+  }
+
+  // --- ALKYNE ---
+  if (type === "alkyne") {
+    addRxn({ type: "alkene", c }, "Partial Hydrogenation",
+      (f, t) => `${f} + \\text{H}_2 \\xrightarrow{\\text{Lindlar}} ${t}`);
+    addRxn({ type: "alkane", c }, "Full Hydrogenation",
+      (f, t) => `${f} + 2\\text{H}_2 \\xrightarrow{\\text{Ni}, \\Delta} ${t}`);
+    addRxn({ type: "carbonyl", c }, "Hydration",
+      (f, t) => `${f} + \\text{H}_2\\text{O} \\xrightarrow{\\text{HgSO}_4, \\text{H}_2\\text{SO}_4} ${t}`);
+  }
+
+  // --- ALCOHOL ---
+  if (type === "alcohol") {
+    if (c >= 2) {
+      addRxn({ type: "alkene", c }, "Dehydration",
+        (f, t) => `${f} \\xrightarrow{\\text{Conc. H}_2\\text{SO}_4, 170^\\circ\\text{C}} ${t} + \\text{H}_2\\text{O}`);
+    }
+    addRxn({ type: "carbonyl", c }, "Oxidation",
+      (f, t) => `${f} + [\\text{O}] \\xrightarrow{\\text{K}_2\\text{Cr}_2\\text{O}_7, \\text{H}_2\\text{SO}_4} ${t} + \\text{H}_2\\text{O}`);
+  }
+
+  // --- CARBONYL ---
+  if (type === "carbonyl") {
+    addRxn({ type: "alcohol", c }, "Reduction",
+      (f, t) => `${f} + \\text{H}_2 \\xrightarrow{\\text{Ni}, \\Delta} ${t}`);
+    addRxn({ type: "acid", c }, "Oxidation",
+      (f, t) => `${f} + [\\text{O}] \\xrightarrow{\\text{K}_2\\text{Cr}_2\\text{O}_7, \\text{H}_2\\text{SO}_4} ${t}`);
+  }
+
+  // --- ACID ---
+  if (type === "acid") {
+    addRxn({ type: "carbonyl", c }, "Reduction",
+      (f, t) => `${f} \\xrightarrow{\\text{LiAlH}_4} ${t} + \\text{H}_2\\text{O}`);
+    if (c >= 2) {
+      addRxn({ type: "alkane", c: c - 1 }, "Decarboxylation (Chain −1)",
+        (f, t) => `${f} \\xrightarrow{\\text{NaOH, CaO}, \\Delta} ${t} + \\text{Na}_2\\text{CO}_3`);
+    }
+  }
+
+  return rxns;
+}
+
+/* ================================================================
+   3. PATHFINDING (BFS)
+   ================================================================ */
+function findPath(startState, endState) {
+  const startKey = `${startState.type}_${startState.c}_${startState.cl || 0}`;
+  const endKey = `${endState.type}_${endState.c}_${endState.cl || 0}`;
+
+  if (startKey === endKey) return { steps: [] };
+
+  const queue = [{ state: startState, steps: [] }];
+  const visited = new Set([startKey]);
+
+  while (queue.length > 0) {
+    const { state, steps } = queue.shift();
+    const possibleReactions = getReactions(state);
+
+    for (const rxn of possibleReactions) {
+      const nextKey = `${rxn.to.type}_${rxn.to.c}_${rxn.to.cl || 0}`;
+      if (visited.has(nextKey)) continue;
+      
+      const newSteps = [...steps, rxn];
+      
+      if (nextKey === endKey) {
+        return { steps: newSteps };
+      }
+
+      visited.add(nextKey);
+      queue.push({ state: rxn.to, steps: newSteps });
+    }
+  }
+
+  return null;
+}
+
+/* ================================================================
+   4. UI RENDERER & EVENT LISTENERS
+   ================================================================ */
+function renderResults(fromInput, toInput, result) {
+  const el = document.getElementById("results");
+  
+  if (!result) {
+    el.innerHTML = `
+      <div class="alert error">
+        <strong>No pathway found</strong> — No known reaction sequence connects "${fromInput}" to "${toInput}".
+      </div>`;
+    return;
+  }
+
+  if (result.steps.length === 0) {
+    el.innerHTML = `<div class="alert success">Both inputs refer to the same compound. No reaction needed.</div>`;
+    return;
+  }
+
+  let html = `
+    <div class="results-header">
+      <h3>Reaction Pathway</h3>
+      <p>${result.steps.length} step${result.steps.length === 1 ? "" : "s"} required</p>
+    </div>`;
+
+  result.steps.forEach((step, i) => {
+    // Render the LaTeX equation using KaTeX
+    const renderedEq = katex.renderToString(step.eq, { throwOnError: false, displayMode: true });
+
+    html += `
+      <div class="step-card">
+        <div class="step-number">${i + 1}</div>
+        <div class="step-name">${step.name}</div>
+        
+        <div class="step-eq">
+          ${renderedEq}
+        </div>
+      </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function run() {
+  const fromRaw = document.getElementById("fromInput").value.trim();
+  const toRaw = document.getElementById("toInput").value.trim();
+  const el = document.getElementById("results");
+
+  if (!fromRaw || !toRaw) {
+    el.innerHTML = `<div class="alert error">Please enter both a starting and a target compound.</div>`;
+    return;
+  }
+
+  const startState = parseCompound(fromRaw);
+  const endState = parseCompound(toRaw);
+
+  if (!startState) {
+    el.innerHTML = `<div class="alert error">Could not recognize starting compound: "<strong>${fromRaw}</strong>".</div>`;
+    return;
+  }
+  if (!endState) {
+    el.innerHTML = `<div class="alert error">Could not recognize target compound: "<strong>${toRaw}</strong>".</div>`;
+    return;
+  }
+
+  const result = findPath(startState, endState);
+  renderResults(fromRaw, toRaw, result);
+}
+
+// Event Listeners
+document.getElementById("findBtn").addEventListener("click", run);
+document.getElementById("fromInput").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("toInput").focus(); });
+document.getElementById("toInput").addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+document.querySelectorAll(".ex-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.getElementById("fromInput").value = chip.dataset.from;
+    document.getElementById("toInput").value = chip.dataset.to;
+    run();
+  });
+});
+
+// Mobile Toggle Event
+document.getElementById("mobileToggle").addEventListener("change", (e) => {
+  if (e.target.checked) {
+    document.body.classList.add("mobile-fit");
+  } else {
+    document.body.classList.remove("mobile-fit");
+  }
+});
+</script>
+</body>
+</html>
